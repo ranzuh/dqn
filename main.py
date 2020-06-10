@@ -38,7 +38,7 @@ def train(env, agent, episodes=10001):
             total_reward += reward
 
             if done:
-                print("Episode {} finished after {} timesteps and total reward was {}".format(episode, timesteps + 1, total_reward))
+                print("Episode {} finished after {} timesteps and total reward was {}".format(episode, timesteps + 1, round(total_reward, 2)))
 
             timesteps += 1
 

@@ -12,7 +12,7 @@ class DQNAgent(Agent):
     epsilon = 1
     epsilon_decay = 0.9999
     # discount future rewards
-    discount = 0.
+    discount = 0.99
     replay_start_size = 1000
     replay_memory_size = 10000
 
