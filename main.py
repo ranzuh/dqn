@@ -3,6 +3,7 @@ from agents.random_agent import RandomAgent
 from agents.qlearning_agent import QLearningAgent
 from agents.dqn_agent import DQNAgent
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def train(env, agent, episodes=10001):
@@ -13,8 +14,7 @@ def train(env, agent, episodes=10001):
     :param episodes: integer
     """
     # These are for statistics
-    total_penalties = 0
-    completions = 0
+    rewards_per_episode = []
     total_timesteps = 0
 
     for episode in range(episodes):
@@ -24,7 +24,6 @@ def train(env, agent, episodes=10001):
         state = env.reset()
         reward = 0
         done = False
-        penalties = 0
         total_reward = 0
         timesteps = 0
 
@@ -39,21 +38,22 @@ def train(env, agent, episodes=10001):
             total_reward += reward
 
             if done:
-                print("Episode {} finished after {} timesteps".format(episode, timesteps + 1))
+                print("Episode {} finished after {} timesteps and total reward was {}".format(episode, timesteps + 1, total_reward))
 
             timesteps += 1
 
-            if (total_timesteps + timesteps) % 100 == 0:
+            if (total_timesteps + timesteps) % 1000 == 0:
                 agent.update_target()
 
-        total_penalties += penalties
+
+        rewards_per_episode.append(total_reward)
         total_timesteps += timesteps
 
     print()
     print("Training complete after", episodes, "episodes")
-    print("Average penalties over episode", total_penalties / episodes)
-    print("Completions", completions)
     print()
+    plt.plot(rewards_per_episode)
+    plt.show()
 
 
 def evaluate(env, agent, episodes=100):
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # Initialize and train DQN agent
     agent = DQNAgent(env.action_space, env.observation_space)
-    train(env, agent, 101)
+    train(env, agent, 200)
 
     #Evaluate trained DQN agent
     print("DQN agent")

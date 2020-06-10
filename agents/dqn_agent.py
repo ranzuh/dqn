@@ -10,8 +10,11 @@ class DQNAgent(Agent):
     alpha = 0.1
     # how often random move
     epsilon = 1
+    epsilon_decay = 0.9999
     # discount future rewards
-    discount = 0.9
+    discount = 0.
+    replay_start_size = 1000
+    replay_memory_size = 10000
 
     def __init__(self, action_space, observation_space):
         super().__init__(action_space)
@@ -28,8 +31,11 @@ class DQNAgent(Agent):
         self.model.add(Dense(16, activation='relu'))
         self.model.add(Dense(16, activation='relu'))
         self.model.add(Dense(action_space.n, activation='linear'))
+
+        #optimizer = keras.optimizers.RMSprop()
+
         self.model.compile(optimizer='rmsprop',
-                      loss='mean_squared_error',
+                      loss='mse',
                       metrics=['accuracy'])
 
         # Initialize target action-value function ^Q with weights theta- = theta
@@ -58,11 +64,12 @@ class DQNAgent(Agent):
         # store transition (state, action, reward, next_state, done) in replay memory D
         self.replay_memory.append((state, action, reward, next_state, done))
 
-        if len(self.replay_memory) > 500:
-            self.train()
+        if len(self.replay_memory) > self.replay_start_size:
+            self.replay()
+            self.epsilon = max(0.1, self.epsilon * self.epsilon_decay)
 
-        if self.epsilon > 0.1:
-            self.epsilon *= 0.9995
+        if len(self.replay_memory) > self.replay_memory_size:
+            self.replay_memory.pop(0)
 
         #print(self.epsilon)
 
@@ -70,7 +77,7 @@ class DQNAgent(Agent):
         print(self.epsilon)
         self.model_target.set_weights(self.model.get_weights())
 
-    def train(self):
+    def replay(self):
         # Sample random minibatch of transitions from replay memory D
 
         batch = random.sample(self.replay_memory, 32)
@@ -79,11 +86,11 @@ class DQNAgent(Agent):
         Y = []
 
         for state, action, reward, next_state, done in batch:
-            y = self.model.predict(np.array([state]))
+            y = self.model.predict_on_batch(np.array([state]))
             if done:
                 y[0][action] = reward
             else:
-                y[0][action] = reward + self.discount * np.amax(self.model_target.predict(np.array([next_state]))[0])
+                y[0][action] = reward + self.discount * np.amax(self.model_target.predict_on_batch(np.array([next_state]))[0])
             X.append(state)
             Y.append(y)
 
