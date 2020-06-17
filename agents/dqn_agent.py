@@ -35,7 +35,7 @@ class DQNAgent(Agent):
         #optimizer = keras.optimizers.RMSprop()
 
         self.model.compile(optimizer='rmsprop',
-                      loss='mse',
+                      loss='huber_loss',
                       metrics=['accuracy'])
 
         # Initialize target action-value function ^Q with weights theta- = theta
