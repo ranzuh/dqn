@@ -4,7 +4,16 @@ from agents.qlearning_agent import QLearningAgent
 from agents.dqn_agent import DQNAgent
 import numpy as np
 import matplotlib.pyplot as plt
+import atexit
 
+rewards_per_episode = []
+
+def exit_handler():
+    global rewards_per_episode
+    plt.plot(rewards_per_episode)
+    plt.show()
+
+atexit.register(exit_handler)
 
 def train(env, agent, episodes=10001):
     """
@@ -14,7 +23,7 @@ def train(env, agent, episodes=10001):
     :param episodes: integer
     """
     # These are for statistics
-    rewards_per_episode = []
+    global rewards_per_episode
     total_timesteps = 0
 
     for episode in range(episodes):
@@ -31,7 +40,6 @@ def train(env, agent, episodes=10001):
             action = agent.get_action(state)
             next_state, reward, done, info = env.step(action)
             agent.observe(state, action, reward, next_state, done)
-
             env.render()
 
             state = next_state
@@ -52,8 +60,7 @@ def train(env, agent, episodes=10001):
     print()
     print("Training complete after", episodes, "episodes")
     print()
-    plt.plot(rewards_per_episode)
-    plt.show()
+
 
 
 def evaluate(env, agent, episodes=100):
@@ -129,3 +136,5 @@ if __name__ == '__main__':
     print("Average rewards", rewards)
     print("Average penalties", penalties)
     print("Average timesteps", timesteps)
+
+

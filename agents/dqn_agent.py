@@ -38,10 +38,12 @@ class DQNAgent(Agent):
                       loss='huber_loss',
                       metrics=['accuracy'])
 
+        self.model.summary()
+
         # Initialize target action-value function ^Q with weights theta- = theta
 
         self.model_target = keras.Sequential()
-        self.model_target.add(keras.Input(shape=observation_space.shape))
+        self.model_target.add(keras.Input(shape=observation_space.shape, batch_size=32))
         self.model_target.add(Dense(16, activation='relu'))
         self.model_target.add(Dense(16, activation='relu'))
         self.model_target.add(Dense(16, activation='relu'))
@@ -85,18 +87,23 @@ class DQNAgent(Agent):
         X = []
         Y = []
 
-        for state, action, reward, next_state, done in batch:
-            y = self.model.predict_on_batch(np.array([state]))
+        states = np.array([i[0] for i in batch])
+        next_states = np.array([i[3] for i in batch])
+
+        y = self.model.predict_on_batch(states)
+        target_next = self.model_target.predict_on_batch(next_states)
+
+        for i, (state, action, reward, next_state, done) in enumerate(batch):
             if done:
-                y[0][action] = reward
+                y[i][action] = reward
             else:
-                y[0][action] = reward + self.discount * np.amax(self.model_target.predict_on_batch(np.array([next_state]))[0])
+                y[i][action] = reward + self.discount * np.amax(target_next[i])
             X.append(state)
-            Y.append(y)
+            Y.append(y[i])
 
         # perform a gradient descent step on (y - Q)^2 with respect to the network parameters theta
 
-        self.model.fit(np.array(X), np.squeeze(np.array(Y)), batch_size=32, epochs=1, verbose=0)
+        self.model.fit(np.array(X), np.array(Y), verbose=0)
 
         # every C steps reset Q^ = Q
 
