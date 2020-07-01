@@ -1,4 +1,4 @@
-Deep Q-Network in OpenAI Gym environments
+Deep Q-Network in OpenAI Gym LunarLander environment
 
 based on
 Mnih, Volodymyr, et al. "Human-level control through deep reinforcement learning." Nature 518.7540 (2015): 529-533.
