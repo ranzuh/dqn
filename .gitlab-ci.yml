@@ -1,6 +1,0 @@
-image: python:latest
-
-build:
-    script:
-       - pip install -r requirements.txt
-       - python main.py
