@@ -7,7 +7,7 @@ import random
 
 class DQNAgent(Agent):
     # learning rate
-    alpha = 0.1
+    learning_rate = 0.001
     # how often random move
     epsilon = 1
     epsilon_decay = 0.9999
@@ -20,36 +20,32 @@ class DQNAgent(Agent):
         super().__init__(action_space)
 
         # Initialize replay memory D to capacity N
-
         self.replay_memory = []
 
         # Initialize action-value function Q with random weights theta
+        self.model = self.create_model(action_space, observation_space)
 
-        self.model = keras.Sequential()
-        self.model.add(keras.Input(shape=observation_space.shape))
-        self.model.add(Dense(16, activation='relu'))
-        self.model.add(Dense(16, activation='relu'))
-        self.model.add(Dense(16, activation='relu'))
-        self.model.add(Dense(action_space.n, activation='linear'))
+        optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate)
+        self.model.compile(
+            optimizer=optimizer,
+            loss='huber_loss',
+            metrics=['accuracy']
+        )
 
-        #optimizer = keras.optimizers.RMSprop()
-
-        self.model.compile(optimizer='rmsprop',
-                      loss='huber_loss',
-                      metrics=['accuracy'])
-
-        self.model.summary()
+        #self.model.summary()
 
         # Initialize target action-value function ^Q with weights theta- = theta
-
-        self.model_target = keras.Sequential()
-        self.model_target.add(keras.Input(shape=observation_space.shape, batch_size=32))
-        self.model_target.add(Dense(16, activation='relu'))
-        self.model_target.add(Dense(16, activation='relu'))
-        self.model_target.add(Dense(16, activation='relu'))
-        self.model_target.add(Dense(action_space.n, activation='linear'))
+        self.model_target = self.create_model(action_space, observation_space)
         self.model_target.set_weights(self.model.get_weights())
 
+    def create_model(self, action_space, observation_space):
+        model = keras.Sequential()
+        model.add(keras.Input(shape=observation_space.shape))
+        model.add(Dense(16, activation='relu'))
+        model.add(Dense(16, activation='relu'))
+        model.add(Dense(16, activation='relu'))
+        model.add(Dense(action_space.n, activation='linear'))
+        return model
 
     def get_action(self, state):
         # Epsilon-greedy action selection

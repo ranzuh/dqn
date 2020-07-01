@@ -114,7 +114,7 @@ def evaluate(env, agent, episodes=100):
 
 
 if __name__ == '__main__':
-    # Initialize the taxi environment
+    # Initialize the LunarLander environment
     env = gym.make('LunarLander-v2')
 
     # Initialize and train DQN agent
