@@ -39,8 +39,8 @@ def train(env, agent, episodes=10001):
         while not done:
             action = agent.get_action(state)
             next_state, reward, done, info = env.step(action)
-            agent.observe(state, action, reward, next_state, done)
-            env.render()
+            agent.observe(state, action, reward, next_state, done, total_timesteps)
+            #env.render()
 
             state = next_state
             total_reward += reward
@@ -49,9 +49,7 @@ def train(env, agent, episodes=10001):
                 print("Episode {} finished after {} timesteps and total reward was {}".format(episode, timesteps + 1, round(total_reward, 2)))
 
             timesteps += 1
-
-            if (total_timesteps + timesteps) % 1000 == 0:
-                agent.update_target()
+            total_timesteps += 1
 
 
         rewards_per_episode.append(total_reward)
@@ -119,7 +117,7 @@ if __name__ == '__main__':
 
     # Initialize and train DQN agent
     agent = DQNAgent(env.action_space, env.observation_space)
-    train(env, agent, 200)
+    train(env, agent, 500)
 
     #Evaluate trained DQN agent
     print("DQN agent")

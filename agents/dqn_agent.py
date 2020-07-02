@@ -8,13 +8,15 @@ import random
 class DQNAgent(Agent):
     # learning rate
     learning_rate = 0.001
+    # gradient momentum for RMSprop
+    momentum = 0
     # how often random move
     epsilon = 1
-    epsilon_decay = 0.9999
+    epsilon_decay = 0.99995
     # discount future rewards
     discount = 0.99
     replay_start_size = 1000
-    replay_memory_size = 10000
+    replay_memory_size = 100000
 
     def __init__(self, action_space, observation_space):
         super().__init__(action_space)
@@ -25,7 +27,7 @@ class DQNAgent(Agent):
         # Initialize action-value function Q with random weights theta
         self.model = self.create_model(action_space, observation_space)
 
-        optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate)
+        optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate, momentum=self.momentum)
         self.model.compile(
             optimizer=optimizer,
             loss='huber_loss',
@@ -41,9 +43,9 @@ class DQNAgent(Agent):
     def create_model(self, action_space, observation_space):
         model = keras.Sequential()
         model.add(keras.Input(shape=observation_space.shape))
-        model.add(Dense(16, activation='relu'))
-        model.add(Dense(16, activation='relu'))
-        model.add(Dense(16, activation='relu'))
+        model.add(Dense(32, activation='relu'))
+        model.add(Dense(32, activation='relu'))
+        model.add(Dense(32, activation='relu'))
         model.add(Dense(action_space.n, activation='linear'))
         return model
 
@@ -58,7 +60,7 @@ class DQNAgent(Agent):
 
         return action
 
-    def observe(self, state, action, reward, next_state, done):
+    def observe(self, state, action, reward, next_state, done, timesteps):
         # store transition (state, action, reward, next_state, done) in replay memory D
         self.replay_memory.append((state, action, reward, next_state, done))
 
@@ -69,10 +71,14 @@ class DQNAgent(Agent):
         if len(self.replay_memory) > self.replay_memory_size:
             self.replay_memory.pop(0)
 
+        if timesteps % 1000 == 0:
+            print("total timesteps:", timesteps)
+            self.update_target()
+
         #print(self.epsilon)
 
     def update_target(self):
-        print(self.epsilon)
+        print("Updated target. current epsilon:", self.epsilon)
         self.model_target.set_weights(self.model.get_weights())
 
     def replay(self):
