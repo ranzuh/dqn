@@ -7,16 +7,19 @@ import random
 
 class DQNAgent(Agent):
     # learning rate
-    learning_rate = 0.001
+    learning_rate = 0.0001
     # gradient momentum for RMSprop
     momentum = 0
     # how often random move
     epsilon = 1
     epsilon_decay = 0.99995
+    epsilon_min = 0.1
     # discount future rewards
     discount = 0.99
     replay_start_size = 1000
     replay_memory_size = 100000
+    batch_size = 32
+    target_update_steps = 1000
 
     def __init__(self, action_space, observation_space):
         super().__init__(action_space)
@@ -56,7 +59,7 @@ class DQNAgent(Agent):
             action = self.action_space.sample()
         else:
             # Otherwise
-            action = np.argmax(self.model.predict(np.array([state]))[0])
+            action = np.argmax(self.model.predict_on_batch(np.array([state]))[0])
 
         return action
 
@@ -66,25 +69,25 @@ class DQNAgent(Agent):
 
         if len(self.replay_memory) > self.replay_start_size:
             self.replay()
-            self.epsilon = max(0.1, self.epsilon * self.epsilon_decay)
+            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
         if len(self.replay_memory) > self.replay_memory_size:
             self.replay_memory.pop(0)
 
-        if timesteps % 1000 == 0:
-            print("total timesteps:", timesteps)
+        if timesteps % self.target_update_steps == 0:
+            #print("total timesteps:", timesteps)
             self.update_target()
 
         #print(self.epsilon)
 
     def update_target(self):
-        print("Updated target. current epsilon:", self.epsilon)
+        #print("Updated target. current epsilon:", self.epsilon)
         self.model_target.set_weights(self.model.get_weights())
 
     def replay(self):
         # Sample random minibatch of transitions from replay memory D
 
-        batch = random.sample(self.replay_memory, 32)
+        batch = random.sample(self.replay_memory, self.batch_size)
 
         X = []
         Y = []
@@ -105,11 +108,24 @@ class DQNAgent(Agent):
 
         # perform a gradient descent step on (y - Q)^2 with respect to the network parameters theta
 
-        self.model.fit(np.array(X), np.array(Y), verbose=0)
+        self.model.train_on_batch(np.array(X), np.array(Y))
 
         # every C steps reset Q^ = Q
 
     def get_policy(self, state):
-        return np.argmax(self.model.predict(np.array([state]))[0])
+        if np.random.random_sample() < 0.01:
+            # With probability e select a random action a
+            action = self.action_space.sample()
+        else:
+            # Otherwise
+            action = np.argmax(self.model.predict_on_batch(np.array([state]))[0])
+
+        return action
+
+    def save_model(self, filename="dqn_model.h5"):
+        self.model.save(filename)
+
+    def load_model(self, filename="dqn_model.h5"):
+        self.model = keras.models.load_model(filename)
 
 
