@@ -11,11 +11,12 @@ rewards_per_episode = []
 moving_avg = []
 
 moving_avg_number = 100
+eval_freq = 20
 
 def exit_handler():
     global test_scores
-    #plt.plot([i for i in range(0, len(test_scores) * 20, 20)], test_scores)
     plt.plot(rewards_per_episode)
+    plt.plot([i for i in range(0, len(test_scores) * eval_freq, eval_freq)], test_scores)
     plt.plot([i for i in range(moving_avg_number, moving_avg_number + len(moving_avg))], moving_avg)
     plt.ylabel('Average reward')
     plt.xlabel('Episodes')
@@ -37,11 +38,11 @@ def train(env, agent, episodes=10001):
     total_timesteps = 0
 
     for episode in tqdm(range(episodes)):
-        # if episode % 100 == 0:
-            # print("Episode:", episode)
-            # evaluation = evaluate(env, agent, 5)
-            # test_scores.append(evaluation[0])
-            # print("evaluation", evaluation)
+        if episode % eval_freq == 0:
+            print("Episode:", episode)
+            evaluation = evaluate(env, agent, 5)
+            test_scores.append(evaluation[0])
+            print("evaluation", evaluation)
         if episode > moving_avg_number:
             moving_avg.append(np.mean(rewards_per_episode[-moving_avg_number:]))
             # print("mean of last 100 eps", np.mean(rewards_per_episode[-100:]))

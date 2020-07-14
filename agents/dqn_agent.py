@@ -50,6 +50,7 @@ class DQNAgent(Agent):
         model.add(Dense(32, activation='relu'))
         model.add(Dense(32, activation='relu'))
         model.add(Dense(action_space.n, activation='linear'))
+        model.summary()
         return model
 
     def get_action(self, state):
@@ -81,7 +82,7 @@ class DQNAgent(Agent):
         #print(self.epsilon)
 
     def update_target(self):
-        #print("Updated target. current epsilon:", self.epsilon)
+        # print("Updated target. current epsilon:", self.epsilon)
         self.model_target.set_weights(self.model.get_weights())
 
     def replay(self):
