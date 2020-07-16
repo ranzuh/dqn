@@ -24,7 +24,7 @@ def exit_handler():
 
 atexit.register(exit_handler)
 
-def train(env, agent, episodes=10001):
+def train(env, agent, episodes=10001, render=False):
     """
     Train agent on environment env for given amount of episodes
     :param env: a gym environment
@@ -38,11 +38,11 @@ def train(env, agent, episodes=10001):
     total_timesteps = 0
 
     for episode in tqdm(range(episodes)):
-        if episode % eval_freq == 0:
-            print("Episode:", episode)
-            evaluation = evaluate(env, agent, 5)
-            test_scores.append(evaluation[0])
-            print("evaluation", evaluation)
+        # if episode % eval_freq == 0:
+        #     print("Episode:", episode)
+        #     evaluation = evaluate(env, agent, 5)
+        #     test_scores.append(evaluation[0])
+        #     print("evaluation", evaluation)
         if episode > moving_avg_number:
             moving_avg.append(np.mean(rewards_per_episode[-moving_avg_number:]))
             # print("mean of last 100 eps", np.mean(rewards_per_episode[-100:]))
@@ -57,7 +57,9 @@ def train(env, agent, episodes=10001):
             action = agent.get_action(state)
             next_state, reward, done, info = env.step(action)
             agent.observe(state, action, reward, next_state, done, total_timesteps)
-            #env.render()
+
+            if render:
+                env.render()
 
             state = next_state
             total_reward += reward
@@ -75,7 +77,7 @@ def train(env, agent, episodes=10001):
 
 
 
-def evaluate(env, agent, episodes=100):
+def evaluate(env, agent, episodes=100, render=False):
     """
     Evaluate agent in environment env for given amount of episodes.
     :param env: a gym environment
@@ -102,7 +104,8 @@ def evaluate(env, agent, episodes=100):
             action = agent.get_policy(state)
             next_state, reward, done, info = env.step(action)
 
-            env.render()
+            if render:
+                env.render()
 
             state = next_state
 
@@ -122,14 +125,14 @@ if __name__ == '__main__':
     env = gym.make('LunarLander-v2')
     # Initialize and train DQN agent
     agent = DQNAgent(env.action_space, env.observation_space)
-    train(env, agent, 600)
+    train(env, agent, 1000)
 
     # Save model as dqn_model.h5
     agent.save_model()
 
     #Evaluate trained DQN agent
     print("DQN agent")
-    rewards, timesteps = evaluate(env, agent, 10)
+    rewards, timesteps = evaluate(env, agent, 10, render=True)
     print("Average rewards", rewards)
     print("Average timesteps", timesteps)
     print()
@@ -137,7 +140,7 @@ if __name__ == '__main__':
     # Evaluate random agent for comparison
     print("Random agent")
     rand_agent = RandomAgent(env.action_space)
-    rewards, timesteps = evaluate(env, rand_agent, 10)
+    rewards, timesteps = evaluate(env, rand_agent, 10, render=True)
     print("Average rewards", rewards)
     print("Average timesteps", timesteps)
 

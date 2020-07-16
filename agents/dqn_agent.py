@@ -7,7 +7,7 @@ import random
 
 class DQNAgent(Agent):
     # learning rate
-    learning_rate = 0.0001
+    learning_rate = 0.001
     # gradient momentum for RMSprop
     momentum = 0
     # how often random move
@@ -17,9 +17,9 @@ class DQNAgent(Agent):
     # discount future rewards
     discount = 0.99
     replay_start_size = 1000
-    replay_memory_size = 100000
+    replay_memory_size = 1000000
     batch_size = 32
-    target_update_steps = 1000
+    target_update_steps = 2000
 
     def __init__(self, action_space, observation_space):
         super().__init__(action_space)
@@ -30,7 +30,8 @@ class DQNAgent(Agent):
         # Initialize action-value function Q with random weights theta
         self.model = self.create_model(action_space, observation_space)
 
-        optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate, momentum=self.momentum)
+        #optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate)
+        optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate)
         self.model.compile(
             optimizer=optimizer,
             loss='huber_loss',
@@ -78,8 +79,8 @@ class DQNAgent(Agent):
         if timesteps % self.target_update_steps == 0:
             #print("total timesteps:", timesteps)
             self.update_target()
-
-        #print(self.epsilon)
+        if timesteps % 10000 == 0:
+            print(self.epsilon)
 
     def update_target(self):
         # print("Updated target. current epsilon:", self.epsilon)
