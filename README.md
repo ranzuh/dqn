@@ -1,5 +1,10 @@
 # Deep Q-Network in OpenAI Gym LunarLander environment
+
+Reinforcement learning agent that learns to land a rocket optimally!
+
 ![landing.gif](https://user-images.githubusercontent.com/13645811/88183990-d9a72200-cc3a-11ea-9e87-319f46316169.gif)
+
+## Features
 
 * Off-policy model free Q-learning with deep neural network
 * Experience replay and separate target network for more stable learning
@@ -18,3 +23,10 @@ Based on
 
 Environment
 https://gym.openai.com/envs/LunarLander-v2/
+
+### TODO
+* DQN extensions
+  * Double-DQN
+  * Prioritized experience replay
+  * Dueling-DQN
+* Refactoring and better documentation
