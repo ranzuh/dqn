@@ -12,10 +12,20 @@ Reinforcement learning agent that learns to land a rocket optimally!
 
 ## Usage
 
-Run main.py to start training, you will get a plot if you ctrl-c.
+* Requires Python 3
 
+Install the requirements
+```
+pip install -r requirements.txt
+```
+Run main.py to start training, you will get a plot if you abort the training with Ctrl-C.
+```
+python main.py
+```
 Run example.py to see pre-trained agent in action.
-
+```
+python example.py
+```
 
 ### Additional info
 Based on
