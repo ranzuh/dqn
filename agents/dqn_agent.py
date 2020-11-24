@@ -12,14 +12,16 @@ class DQNAgent(Agent):
     momentum = 0
     # how often random move
     epsilon = 1
-    epsilon_decay = 0.99995
+    epsilon_annealing_steps = 30000
     epsilon_min = 0.1
+    epsilon_decay = (epsilon - epsilon_min) / epsilon_annealing_steps
     # discount future rewards
     discount = 0.99
     replay_start_size = 1000
     replay_memory_size = 1000000
     batch_size = 32
     target_update_steps = 2000
+    use_double_dqn = True
 
     def __init__(self, action_space, observation_space):
         super().__init__(action_space)
@@ -30,7 +32,7 @@ class DQNAgent(Agent):
         # Initialize action-value function Q with random weights theta
         self.model = self.create_model(action_space, observation_space)
 
-        #optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate)
+        # optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate)
         optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate)
         self.model.compile(
             optimizer=optimizer,
@@ -38,7 +40,7 @@ class DQNAgent(Agent):
             metrics=['accuracy']
         )
 
-        #self.model.summary()
+        # self.model.summary()
 
         # Initialize target action-value function ^Q with weights theta- = theta
         self.model_target = self.create_model(action_space, observation_space)
@@ -71,13 +73,13 @@ class DQNAgent(Agent):
 
         if len(self.replay_memory) > self.replay_start_size:
             self.replay()
-            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+            self.epsilon = max(self.epsilon_min, self.epsilon - self.epsilon_decay)
 
         if len(self.replay_memory) > self.replay_memory_size:
             self.replay_memory.pop(0)
 
         if timesteps % self.target_update_steps == 0:
-            #print("total timesteps:", timesteps)
+            # print("total timesteps:", timesteps)
             self.update_target()
         if timesteps % 10000 == 0:
             print(self.epsilon)
@@ -100,11 +102,19 @@ class DQNAgent(Agent):
         y = self.model.predict_on_batch(states)
         target_next = self.model_target.predict_on_batch(next_states)
 
+        y_next = None
+        if self.use_double_dqn:
+            y_next = self.model.predict_on_batch(next_states)
+
         for i, (state, action, reward, next_state, done) in enumerate(batch):
             if done:
                 y[i][action] = reward
             else:
-                y[i][action] = reward + self.discount * np.amax(target_next[i])
+                if self.use_double_dqn:
+                    y[i][action] = reward + self.discount * target_next[i][np.argmax(y_next[i])]
+                else:
+                    y[i][action] = reward + self.discount * np.amax(target_next[i])
+
             X.append(state)
             Y.append(y[i])
 
@@ -129,5 +139,3 @@ class DQNAgent(Agent):
 
     def load_model(self, filename="dqn_model.h5"):
         self.model = keras.models.load_model(filename)
-
-
