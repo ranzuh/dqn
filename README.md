@@ -4,11 +4,16 @@ Reinforcement learning agent that learns to land a rocket optimally!
 
 ![landing.gif](https://user-images.githubusercontent.com/13645811/88183990-d9a72200-cc3a-11ea-9e87-319f46316169.gif)
 
-### Features
+## Motivation
+
+I made this because I wanted to learn about deep reinforcement learning. I had already implemented Q-learning algorithm for Taxi environment and I wanted to tackle more challening environment. Lunar lander wasn't an easy environment but it seemed fun and I also like rockets!
+
+## Features
 
 * Off-policy model free Q-learning with deep neural network
 * Experience replay and separate target network for more stable learning
 * Able to solve LunarLander environment (LunarLander-v2 is considered "solved" when the agent obtains an average reward of at least 200 over 100 consecutive episodes.)
+* Uses Double DQN target for better performance
 
 ## Technologies
 * Python 3.7
@@ -37,14 +42,16 @@ python example.py
 
 ## Additional info
 Based on Deepmind's DQN paper:
-Mnih, Volodymyr, et al. "Human-level control through deep reinforcement learning." nature (2015)
+Mnih, Volodymyr, et al. "Human-level control through deep reinforcement learning." (2015)
+
+Double DQN from:
+Van Hasselt, Hado, Arthur Guez, and David Silver. "Deep reinforcement learning with double q-learning." (2015)
 
 Environment
 https://gym.openai.com/envs/LunarLander-v2/
 
 ## TODO
 * DQN extensions
-  * Double-DQN
   * Prioritized experience replay
   * Dueling-DQN
 * Refactoring and better documentation
