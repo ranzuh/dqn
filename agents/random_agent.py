@@ -7,5 +7,5 @@ class RandomAgent(Agent):
         # Choose random action
         return self.action_space.sample()
 
-    def get_policy(self, state):
+    def get_greedy_action(self, state):
         return self.get_action(state)

@@ -32,11 +32,12 @@ class DQNAgent(Agent):
         # Initialize action-value function Q with random weights theta
         self.model = self.create_model(action_space, observation_space)
 
-        # optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate)
-        optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate)
+        optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate)
+        # optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_rate)
+
         self.model.compile(
             optimizer=optimizer,
-            loss='huber_loss',
+            loss='mse',  # huber_loss or mse
             metrics=['accuracy']
         )
 
@@ -49,9 +50,9 @@ class DQNAgent(Agent):
     def create_model(self, action_space, observation_space):
         model = keras.Sequential()
         model.add(keras.Input(shape=observation_space.shape))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(32, activation='relu'))
+        model.add(Dense(64, activation='relu'))
+        model.add(Dense(64, activation='relu'))
+        # model.add(Dense(32, activation='relu'))
         model.add(Dense(action_space.n, activation='linear'))
         model.summary()
         return model
@@ -82,7 +83,7 @@ class DQNAgent(Agent):
             # print("total timesteps:", timesteps)
             self.update_target()
         if timesteps % 10000 == 0:
-            print(self.epsilon)
+            print("\n epsilon", self.epsilon, "timesteps", timesteps)
 
     def update_target(self):
         # print("Updated target. current epsilon:", self.epsilon)
@@ -109,11 +110,10 @@ class DQNAgent(Agent):
         for i, (state, action, reward, next_state, done) in enumerate(batch):
             if done:
                 y[i][action] = reward
+            elif self.use_double_dqn:
+                y[i][action] = reward + self.discount * target_next[i][np.argmax(y_next[i])]
             else:
-                if self.use_double_dqn:
-                    y[i][action] = reward + self.discount * target_next[i][np.argmax(y_next[i])]
-                else:
-                    y[i][action] = reward + self.discount * np.amax(target_next[i])
+                y[i][action] = reward + self.discount * np.amax(target_next[i])
 
             X.append(state)
             Y.append(y[i])
@@ -124,8 +124,9 @@ class DQNAgent(Agent):
 
         # every C steps reset Q^ = Q
 
-    def get_policy(self, state):
-        if np.random.random_sample() < 0.01:
+    def get_greedy_action(self, state):
+        # 0 or 0.05 or 0.01
+        if np.random.random_sample() < 0:
             # With probability e select a random action a
             action = self.action_space.sample()
         else:

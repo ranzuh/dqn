@@ -38,7 +38,7 @@ class QLearningAgent(Agent):
 
         Q[s, a] = Q[s, a] + alpha * (r + discount * (np.max(Q[s1])) - Q[s, a])
 
-    def get_policy(self, state):
+    def get_greedy_action(self, state):
         return np.argmax(self.Q[state])
 
     def printq(self):

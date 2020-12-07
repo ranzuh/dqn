@@ -11,9 +11,9 @@ class Agent:
         """
         pass
 
-    def get_policy(self, state):
+    def get_greedy_action(self, state):
         """
-        Returns action according to policy
+        Returns greedy action according to policy
         :param state: current state
         :return action
         """
