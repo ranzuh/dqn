@@ -8,4 +8,4 @@ class RandomAgent(Agent):
         return self.action_space.sample()
 
     def get_greedy_action(self, state):
-        return self.get_action(state)
+        return self.action_space.sample()

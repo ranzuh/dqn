@@ -13,7 +13,7 @@ class QLearningAgent(Agent):
     discount = 0.6
 
     def __init__(self, action_space, observation_space):
-        super().__init__(action_space)
+        super().__init__(action_space, observation_space)
 
         # initialize empty Q-table
         self.Q = np.zeros((observation_space.n, action_space.n))

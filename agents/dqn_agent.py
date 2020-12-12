@@ -24,7 +24,7 @@ class DQNAgent(Agent):
     use_double_dqn = True
 
     def __init__(self, action_space, observation_space):
-        super().__init__(action_space)
+        super().__init__(action_space, observation_space)
 
         # Initialize replay memory D to capacity N
         self.replay_memory = []
