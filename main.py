@@ -19,14 +19,14 @@ def create_next_folder(folder_name="data"):
     i = 0
     while True:
         try:
-            os.mkdir(folder_name + "/run" + str(i))
+            os.makedirs(folder_name + "/run" + str(i))
         except FileExistsError:
             i += 1
             continue
         else:
             break
 
-    return "data/run" + str(i)
+    return folder_name + "/run" + str(i)
 
 def log_stats(folder_name="data"):
     np.savetxt(folder_name + "/episode_rewards.csv", rewards_per_episode, delimiter=", ", fmt="%d")
