@@ -2,11 +2,11 @@ from main import evaluate
 from agents.dqn_agent import DQNAgent
 import gym
 
-#env = gym.make('CartPole-v1')
-env = gym.make('LunarLander-v2')
+env = gym.make('CartPole-v1')
+#env = gym.make('LunarLander-v2')
 agent = DQNAgent(env.action_space, env.observation_space)
 
-file_name = "dqn_model_paras.h5"
+file_name = "dqn_model.h5"
 agent.load_model(file_name)
 print(file_name)
 rewards, timesteps = evaluate(env, agent, 10, render=True)

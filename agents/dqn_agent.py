@@ -12,7 +12,7 @@ class DQNAgent(Agent):
     momentum = 0
     # how often random move
     epsilon = 1
-    epsilon_annealing_steps = 30000
+    epsilon_annealing_steps = 10000
     epsilon_min = 0.1
     epsilon_decay = (epsilon - epsilon_min) / epsilon_annealing_steps
     # discount future rewards

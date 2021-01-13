@@ -42,7 +42,7 @@ def exit_handler():
 atexit.register(exit_handler)
 
 
-def train(env, agent, episodes=10001, render=False, eval=True):
+def train(env, agent, training_steps=100000, render=False, eval=True):
     """
     Train agent on environment env for given amount of episodes
     :param env: a gym environment
@@ -55,24 +55,30 @@ def train(env, agent, episodes=10001, render=False, eval=True):
     global moving_avg
     total_timesteps = 0
 
-    for episode in tqdm(range(episodes)):
-        if eval and episode % eval_freq == 0 and episode > 0:
-            print("\nEvaluation - Episode:", episode)
-            max_score = max(test_scores, default=-math.inf)
-            evaluation = evaluate(env, agent, 10, render=False)
-            if evaluation[0] > max_score:
-                print("new max score", evaluation[0], max_score)
-                agent.save_model(filename="dqn_model_best.h5")
-            test_scores.append(evaluation[0])
-            print("evaluation", evaluation)
-        if episode > moving_avg_number:
-            moving_avg.append(np.mean(rewards_per_episode[-moving_avg_number:]))
-            # print("mean of last 100 eps", np.mean(rewards_per_episode[-100:]))
+    state = env.reset()
+    done = False
+    total_reward = 0
+    timesteps = 0
 
-        state = env.reset()
-        done = False
-        total_reward = 0
-        timesteps = 0
+    while True:
+        # if eval and episode % eval_freq == 0 and episode > 0:
+        #     print("\nEvaluation - Episode:", episode)
+        #     max_score = max(test_scores, default=-math.inf)
+        #     evaluation = evaluate(env, agent, 10, render=False)
+        #     if evaluation[0] > max_score:
+        #         print("new max score", evaluation[0], max_score)
+        #         agent.save_model(filename="dqn_model_best.h5")
+        #     test_scores.append(evaluation[0])
+        #     print("evaluation", evaluation)
+        # if episode > moving_avg_number:
+        #     moving_avg.append(np.mean(rewards_per_episode[-moving_avg_number:]))
+        #     # print("mean of last 100 eps", np.mean(rewards_per_episode[-100:]))
+
+        if done:
+            state = env.reset()
+            done = False
+            total_reward = 0
+            timesteps = 0
 
         while not done:
             action = agent.get_action(state)
@@ -87,18 +93,23 @@ def train(env, agent, episodes=10001, render=False, eval=True):
             timesteps += 1
             total_timesteps += 1
 
+            if total_timesteps == training_steps:
+                return
+
             if done:
-                tqdm.write(
-                    "Episode {} finished after {} timesteps and total reward was {}. Last 100 episode mean {}".format(
-                        episode, timesteps, round(total_reward, 2),
-                        round(moving_avg[-1], 2) if moving_avg != [] else 0))
+                #tqdm.write(
+                #    "Episode {} finished after {} timesteps and total reward was {}. Last 100 episode mean {}".format(
+                #        episode, timesteps, round(total_reward, 2),
+                #        round(moving_avg[-1], 2) if moving_avg != [] else 0))
+                print("Episode finished after {} timesteps and total reward was {}. Total steps {}".format(
+                        timesteps, round(total_reward, 2), total_timesteps))
 
         rewards_per_episode.append(total_reward)
         agent.save_model()
 
-    print()
-    print("Training complete after", episodes, "episodes")
-    print()
+    #print()
+    #print("Training complete after", episodes, "episodes")
+    #print()
 
 
 def evaluate(env, agent, episodes=100, render=False):
@@ -146,11 +157,11 @@ def evaluate(env, agent, episodes=100, render=False):
 
 if __name__ == '__main__':
     # Initialize the LunarLander environment
-    #env = gym.make('CartPole-v1')
-    env = gym.make('LunarLander-v2')
+    env = gym.make('CartPole-v0')
+    #env = gym.make('LunarLander-v2')
     # Initialize and train DQN agent
     agent = DQNAgent(env.action_space, env.observation_space)
-    train(env, agent, 1000)
+    train(env, agent, 100000)
 
     # Save model as dqn_model.h5
     agent.save_model()
