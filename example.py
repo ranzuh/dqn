@@ -2,7 +2,7 @@ from main import evaluate
 from agents.dqn_agent import DQNAgent
 import gym
 
-env = gym.make('CartPole-v1')
+env = gym.make('CartPole-v0')
 #env = gym.make('LunarLander-v2')
 agent = DQNAgent(env.action_space, env.observation_space)
 

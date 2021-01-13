@@ -7,21 +7,21 @@ import random
 
 class DQNAgent(Agent):
     # learning rate
-    learning_rate = 0.001
+    learning_rate = 0.0001
     # gradient momentum for RMSprop
     momentum = 0
     # how often random move
     epsilon = 1
-    epsilon_annealing_steps = 10000
+    epsilon_annealing_steps = 5000
     epsilon_min = 0.1
     epsilon_decay = (epsilon - epsilon_min) / epsilon_annealing_steps
     # discount future rewards
     discount = 0.99
-    replay_start_size = 1000
+    replay_start_size = 200
     replay_memory_size = 1000000
     batch_size = 32
-    target_update_steps = 2000
-    use_double_dqn = True
+    target_update_steps = 500
+    use_double_dqn = False
 
     def __init__(self, action_space, observation_space):
         super().__init__(action_space, observation_space)

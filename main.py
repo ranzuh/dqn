@@ -13,7 +13,7 @@ rewards_per_episode = []
 moving_avg = []
 
 moving_avg_number = 100
-eval_freq = 10
+eval_freq = 2000
 
 def create_next_folder(folder_name="data"):
     i = 0
@@ -59,20 +59,12 @@ def train(env, agent, training_steps=100000, render=False, eval=True):
     done = False
     total_reward = 0
     timesteps = 0
+    episode = 1
 
     while True:
-        # if eval and episode % eval_freq == 0 and episode > 0:
-        #     print("\nEvaluation - Episode:", episode)
-        #     max_score = max(test_scores, default=-math.inf)
-        #     evaluation = evaluate(env, agent, 10, render=False)
-        #     if evaluation[0] > max_score:
-        #         print("new max score", evaluation[0], max_score)
-        #         agent.save_model(filename="dqn_model_best.h5")
-        #     test_scores.append(evaluation[0])
-        #     print("evaluation", evaluation)
-        # if episode > moving_avg_number:
-        #     moving_avg.append(np.mean(rewards_per_episode[-moving_avg_number:]))
-        #     # print("mean of last 100 eps", np.mean(rewards_per_episode[-100:]))
+        if episode > moving_avg_number:
+            moving_avg.append(np.mean(rewards_per_episode[-moving_avg_number:]))
+            # print("mean of last 100 eps", np.mean(rewards_per_episode[-100:]))
 
         if done:
             state = env.reset()
@@ -81,6 +73,17 @@ def train(env, agent, training_steps=100000, render=False, eval=True):
             timesteps = 0
 
         while not done:
+            if eval and total_timesteps % eval_freq == 0 and total_timesteps > 0:
+                print("\nEvaluation - Episode:", episode)
+                max_score = max(test_scores, default=-math.inf)
+                evaluation = evaluate(env, agent, 10, render=False)
+                if evaluation[0] > max_score:
+                    print("new max score", evaluation[0], max_score)
+                    agent.save_model(filename="dqn_model_best.h5")
+                test_scores.append(evaluation[0])
+                print("evaluation", evaluation)
+                state = env.reset()
+
             action = agent.get_action(state)
             next_state, reward, done, info = env.step(action)
             agent.observe(state, action, reward, next_state, done, total_timesteps)
@@ -101,11 +104,12 @@ def train(env, agent, training_steps=100000, render=False, eval=True):
                 #    "Episode {} finished after {} timesteps and total reward was {}. Last 100 episode mean {}".format(
                 #        episode, timesteps, round(total_reward, 2),
                 #        round(moving_avg[-1], 2) if moving_avg != [] else 0))
-                print("Episode finished after {} timesteps and total reward was {}. Total steps {}".format(
-                        timesteps, round(total_reward, 2), total_timesteps))
+                print("Episode {} finished after {} timesteps and total reward was {}. Total steps {}. Last 100 episode mean {}".format(
+                        episode, timesteps, round(total_reward, 2), total_timesteps, round(moving_avg[-1], 2) if moving_avg != [] else 0))
 
         rewards_per_episode.append(total_reward)
         agent.save_model()
+        episode += 1
 
     #print()
     #print("Training complete after", episodes, "episodes")
@@ -161,7 +165,8 @@ if __name__ == '__main__':
     #env = gym.make('LunarLander-v2')
     # Initialize and train DQN agent
     agent = DQNAgent(env.action_space, env.observation_space)
-    train(env, agent, 100000)
+    
+    train(env, agent, 50000)
 
     # Save model as dqn_model.h5
     agent.save_model()
