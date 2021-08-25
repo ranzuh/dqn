@@ -1,6 +1,6 @@
 ﻿gym
 numpy
 matplotlib
-tensorflow==1.15.0
+tensorflow==2.5.1
 tqdm
 box2d
