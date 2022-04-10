@@ -2,44 +2,19 @@ import gym
 from agents.random_agent import RandomAgent
 from agents.dqn_agent import DQNAgent
 import numpy as np
-import atexit
-from tqdm import tqdm
-import math
 import os
 from plot import plot
+import timeit
+import wandb
+
+start = timeit.default_timer()
 
 test_scores = []
 rewards_per_episode = []
 moving_avg = []
 
 moving_avg_number = 100
-eval_freq = 2000
-
-def create_next_folder(folder_name="data"):
-    i = 0
-    while True:
-        try:
-            os.makedirs(folder_name + "/run" + str(i))
-        except FileExistsError:
-            i += 1
-            continue
-        else:
-            break
-
-    return folder_name + "/run" + str(i)
-
-def log_stats(folder_name="data"):
-    np.savetxt(folder_name + "/episode_rewards.csv", rewards_per_episode, delimiter=", ", fmt="%d")
-    np.savetxt(folder_name + "/test_scores.csv", test_scores, delimiter=", ", fmt="%d")
-    np.savetxt(folder_name + "/moving_avg.csv", moving_avg, delimiter=", ", fmt="%d")
-
-
-def exit_handler():
-    run_folder = create_next_folder("data")
-    log_stats(run_folder)
-    plot(run_folder, eval_freq, moving_avg_number)
-
-atexit.register(exit_handler)
+eval_freq = 10000
 
 
 def train(env, agent, training_steps=100000, render=False, eval=True):
@@ -49,6 +24,9 @@ def train(env, agent, training_steps=100000, render=False, eval=True):
     :param agent: an agent from /agents
     :param episodes: integer
     """
+
+    wandb.init(project="dqn")
+
     # These are for statistics
     global test_scores
     global rewards_per_episode
@@ -64,7 +42,6 @@ def train(env, agent, training_steps=100000, render=False, eval=True):
     while True:
         if episode > moving_avg_number:
             moving_avg.append(np.mean(rewards_per_episode[-moving_avg_number:]))
-            # print("mean of last 100 eps", np.mean(rewards_per_episode[-100:]))
 
         if done:
             state = env.reset()
@@ -73,16 +50,16 @@ def train(env, agent, training_steps=100000, render=False, eval=True):
             timesteps = 0
 
         while not done:
-            if eval and total_timesteps % eval_freq == 0 and total_timesteps > 0:
-                print("\nEvaluation - Episode:", episode)
-                max_score = max(test_scores, default=-math.inf)
-                evaluation = evaluate(env, agent, 10, render=False)
-                if evaluation[0] > max_score:
-                    print("new max score", evaluation[0], max_score)
-                    agent.save_model(filename="dqn_model_best.h5")
-                test_scores.append(evaluation[0])
-                print("evaluation", evaluation)
-                state = env.reset()
+            # if eval and total_timesteps % eval_freq == 0 and total_timesteps > 0:
+            #     print("\nEvaluation - Episode:", episode)
+            #     max_score = max(test_scores, default=-math.inf)
+            #     evaluation = evaluate(env, agent, 10, render=False)
+            #     if evaluation[0] > max_score:
+            #         print("new max score", evaluation[0], max_score)
+            #         agent.save_model(filename="dqn_model_best.h5")
+            #     test_scores.append(evaluation[0])
+            #     print("evaluation", evaluation)
+            #     state = env.reset()
 
             action = agent.get_action(state)
             next_state, reward, done, info = env.step(action)
@@ -96,24 +73,20 @@ def train(env, agent, training_steps=100000, render=False, eval=True):
             timesteps += 1
             total_timesteps += 1
 
-            if total_timesteps == training_steps:
+            if total_timesteps == training_steps + 1:
                 return
 
             if done:
-                #tqdm.write(
-                #    "Episode {} finished after {} timesteps and total reward was {}. Last 100 episode mean {}".format(
-                #        episode, timesteps, round(total_reward, 2),
-                #        round(moving_avg[-1], 2) if moving_avg != [] else 0))
-                print("Episode {} finished after {} timesteps and total reward was {}. Total steps {}. Last 100 episode mean {}".format(
-                        episode, timesteps, round(total_reward, 2), total_timesteps, round(moving_avg[-1], 2) if moving_avg != [] else 0))
+                stop = timeit.default_timer()
+
+                diff = stop - start
+                print("Episode {}, {} timesteps, total reward was {}, Total steps {}, Steps per sec {}, 100 episode mean {}".format(
+                        episode, timesteps, round(total_reward, 2), total_timesteps, int(total_timesteps/diff), round(moving_avg[-1], 2) if moving_avg != [] else 0))
+                wandb.log({'Episode reward': round(total_reward, 2)}, step=total_timesteps)
 
         rewards_per_episode.append(total_reward)
-        agent.save_model()
+        #agent.save_model()
         episode += 1
-
-    #print()
-    #print("Training complete after", episodes, "episodes")
-    #print()
 
 
 def evaluate(env, agent, episodes=100, render=False):
@@ -161,28 +134,29 @@ def evaluate(env, agent, episodes=100, render=False):
 
 if __name__ == '__main__':
     # Initialize the LunarLander environment
-    env = gym.make('CartPole-v0')
+    env = gym.make('CartPole-v1')
     #env = gym.make('LunarLander-v2')
+
     # Initialize and train DQN agent
     agent = DQNAgent(env.action_space, env.observation_space)
-    
+    #agent = RandomAgent(env.action_space, env.observation_space)
     train(env, agent, 50000)
 
     # Save model as dqn_model.h5
-    agent.save_model()
+    # agent.save_model()
 
-    # Evaluate trained DQN agent
-    file_name = "dqn_model_best.h5"
-    agent.load_model(file_name)
-    print("DQN agent")
-    rewards, timesteps = evaluate(env, agent, 10, render=True)
-    print("Average rewards", rewards)
-    print("Average timesteps", timesteps)
-    print()
-
-    # Evaluate random agent for comparison
-    print("Random agent")
-    rand_agent = RandomAgent(env.action_space)
-    rewards, timesteps = evaluate(env, rand_agent, 10, render=True)
-    print("Average rewards", rewards)
-    print("Average timesteps", timesteps)
+    # # Evaluate trained DQN agent
+    # file_name = "dqn_model_best.h5"
+    # agent.load_model(file_name)
+    # print("DQN agent")
+    # rewards, timesteps = evaluate(env, agent, 10, render=True)
+    # print("Average rewards", rewards)
+    # print("Average timesteps", timesteps)
+    # print()
+    #
+    # # Evaluate random agent for comparison
+    # print("Random agent")
+    # rand_agent = RandomAgent(env.action_space)
+    # rewards, timesteps = evaluate(env, rand_agent, 10, render=True)
+    # print("Average rewards", rewards)
+    # print("Average timesteps", timesteps)

@@ -9,3 +9,6 @@ class RandomAgent(Agent):
 
     def get_greedy_action(self, state):
         return self.action_space.sample()
+    
+    def observe(self, state, action, reward, next_state, done, timesteps):
+        pass
