@@ -10,18 +10,18 @@ import copy
 class DQNAgent(Agent):
     # learning rate
     # for cartpole 0.000125
-    learning_rate = 0.000250
+    learning_rate = 0.00005
     # gradient momentum for RMSprop
     momentum = 0
     epsilon = 1
-    epsilon_annealing_steps = 5000
-    epsilon_min = 0.1
+    epsilon_annealing_steps = 10000
+    epsilon_min = 0.05
     epsilon_decay = (epsilon - epsilon_min) / epsilon_annealing_steps
     discount = 0.99
     replay_start_size = 500
     replay_memory_size = 1000000
     batch_size = 32
-    target_update_steps = 1000
+    target_update_steps = 1500
     use_double_dqn = False
 
     def __init__(self, action_space, observation_space):
@@ -33,7 +33,7 @@ class DQNAgent(Agent):
         # Initialize action-value function Q with random weights theta
         self.Q = self.create_model(action_space, observation_space)
 
-        self.optimizer = torch.optim.Adam(params=self.Q.parameters(), lr=self.learning_rate)
+        self.optimizer = torch.optim.RMSprop(params=self.Q.parameters(), lr=self.learning_rate)
 
         # Initialize target action-value function ^Q with weights theta- = theta
         self.target_Q = copy.deepcopy(self.Q)
@@ -97,12 +97,13 @@ class DQNAgent(Agent):
 
         q_value = torch.gather(output, 1, action.view(-1,1)).squeeze()
 
-        target = reward + not_done * self.discount * torch.amax(self.target_Q(next_state), 1)
+        with torch.no_grad():
+            target = reward + not_done * self.discount * torch.amax(self.target_Q(next_state), 1)
 
         # perform a gradient descent step on (y - Q)^2 with respect to the network parameters theta
 
         loss_fn = torch.nn.MSELoss()
-        loss = loss_fn(q_value, target.detach())
+        loss = loss_fn(q_value, target)
 
         self.optimizer.zero_grad()
         loss.backward()
